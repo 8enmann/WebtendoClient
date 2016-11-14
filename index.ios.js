@@ -1,0 +1,405 @@
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ * @flow
+ */
+
+import React, { Component } from 'react';
+import {
+  AppRegistry,
+  AsyncStorage,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
+
+import {
+  RTCPeerConnection,
+  RTCIceCandidate,
+  RTCSessionDescription,
+  RTCView,
+} from 'react-native-webrtc';
+
+window.navigator.userAgent = "react-native";
+var io = require('socket.io-client/socket.io');
+var socket = io.connect('ws://localhost:8080', {
+  jsonp: false,
+  transports: ['websocket']
+});
+var {height, width} = Dimensions.get('window');
+
+export default class WebtendoClient extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      joined: false,
+      ip: 'Connecting...',
+    };
+  }
+  componentDidMount() {
+    onMessageReceived = this.onMessageReceived.bind(this);
+  }
+  onMessageReceived(x) {
+    console.log(x);
+    this.setState({ip: 'Connectedz'});
+  }
+  handlePress(evt, region) {
+    let x = evt.nativeEvent.locationX;
+    let y = evt.nativeEvent.locationY;
+    if (region === 'stick') {
+      this.setState({stickLeft: x - 25, stickTop: y - 25});
+      console.log(this.state.stickLeft);
+    }
+    console.log(evt.nativeEvent);
+  }
+  render() {
+    return (
+      <View style={styles.container}>
+      <TouchableWithoutFeedback style={styles.ctrlLeft} onPress={(evt) => this.handlePress(evt, 'stick')}>
+      <View style={styles.joystick}>
+      <View style={[styles.stick, {top: this.state.stickTop, left: this.state.stickLeft}]}>
+      </View>
+      </View>
+      </TouchableWithoutFeedback>
+
+      <View style={styles.buttonBox}>
+      <TouchableOpacity style={[styles.button, {backgroundColor:'#3F51B5'}]} onPress={(evt) => this.handlePress(evt, 'a')}>
+      <Text style={styles.buttonText}>A</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.button, {backgroundColor:'#E91E63'}]}  onPress={(evt) => this.handlePress(evt, 'b')}>
+      <Text style={styles.buttonText}>B</Text>
+      </TouchableOpacity>
+      </View>
+      <Text style={styles.latency}>
+      {this.state.ip}
+      </Text>
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  stick: {
+    backgroundColor: 'white',
+    borderWidth: 2,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    // TODO: replace
+    left: 50,
+    top: 50,
+  },
+  joystick: {
+    width: width / 2,
+    height: width / 2,
+    borderRadius: width / 4,
+    backgroundColor: '#2196F3',
+  },
+  buttonText: {
+    fontSize: 40,
+    color: 'white',
+  },
+  ctrlLeft: {
+    flex:1,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    justifyContent: 'center',
+  },
+  buttonBox: {
+    justifyContent: 'center',
+
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    flex: 1,
+  },
+  button: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  container: {
+    alignItems: 'stretch',
+    flexDirection: 'row',
+    flex: 1,
+    // justifyContent: 'center',
+    // alignItems: 'center',
+    backgroundColor: '#404040',
+  },
+
+  latency: {
+    textAlign: 'center',
+    color: 'white',
+    position: 'absolute',
+    bottom: 0,
+    margin: 10,
+    opacity: .5,
+  },
+});
+
+AppRegistry.registerComponent('WebtendoClient', () => WebtendoClient);
+
+
+/****************************************************************************
+ * Public interface
+ ****************************************************************************/
+
+// Called when a message is received. Host can check message.clientId for sender.
+var onMessageReceived;
+// Called when a data channel opens, passing clientId as argument.
+var onConnected;
+// Am I the host?
+var isHost;
+// My ID.
+var clientId;
+// Send a message to a particular client.
+function sendToClient(recipientId, obj) {
+  return dataChannels[recipientId].send(JSON.stringify(obj));
+}
+// Send a message to all clients.
+function broadcast(obj) {
+  return getClients().map(client => sendToClient(client, obj));
+}
+// Get a list of all the clients connected.
+function getClients() {
+  return Object.keys(dataChannels);
+}
+// Measure latency at 1Hz.
+const AUTO_PING = false;
+const VERBOSE = false;
+
+/****************************************************************************
+ * Initial setup
+ ****************************************************************************/
+
+var configuration = {
+  'iceServers': [
+    {'url': 'stun:stun.l.google.com:19302'},
+    {'url':'stun:stun.services.mozilla.com'},
+  ]
+};
+
+// Attach event handlers
+
+// Create a random room if not already present in the URL.
+isHost = false;
+// TODO: get room from server based on external IP, then store in window.location.hash
+var room = 'foo';
+// Use session storage to maintain connections across refresh but allow
+// multiple tabs in the same browser for testing purposes.
+// Not to be confused with socket ID.
+AsyncStorage.getItem('clientId').then(result => {
+  if (!result) {
+    clientId = Math.random().toString(36).substr(2, 10);
+    AsyncStorage.setItem('clientId', clientId);
+  } else {
+    clientId = result;
+  }
+  // socket.emit('create or join', 'foo', clientId, isHost);
+  maybeLog()('Session clientId ' + clientId);  
+});
+    
+/****************************************************************************
+ * Signaling server
+ ****************************************************************************/
+
+socket.on('created', function(room, hostClientId) {
+  maybeLog()('Created room', room, '- my client ID is', clientId);
+  if (!isHost) {
+    // Get dangling clients to reconnect if a host stutters.
+    peerConns = {};
+    dataChannels = {};
+    socket.emit('create or join', room, clientId, isHost);
+  }
+});
+
+socket.on('full', function(room) {
+  //alert('Room ' + room + ' is full. We will create a new room for you.');
+  //window.location.hash = '';
+  //window.location.reload();
+  maybeLog()('server thinks room is full');
+  // TODO: remove this
+});
+
+socket.on('joined', function(room, clientId) {
+  maybeLog()(clientId, 'joined');
+  createPeerConnection(isHost, configuration, clientId);
+});
+
+socket.on('log', function(array) {
+  console.log.apply(console, array);
+});
+
+socket.on('message', signalingMessageCallback);
+
+socket.on('nohost', () => console.error('No host'));
+
+/**
+ * Send message to signaling server
+ */
+function sendMessage(message, recipient) {
+  var payload = {
+    recipient: recipient,
+    sender: clientId,
+    rtcSessionDescription: message,
+  };
+  maybeLog()('Client sending message: ', payload);
+  socket.emit('message', room, payload);
+}
+
+/****************************************************************************
+ * WebRTC peer connection and data channel
+ ****************************************************************************/
+
+// Map from clientId to RTCPeerConnection. 
+// For clients this will have only the host.
+var peerConns = {};
+// dataChannel.label is the clientId of the recipient. useful in onmessage.
+var dataChannels = {};
+
+function signalingMessageCallback(message) {
+  maybeLog()('Client received message:', message);
+  var peerConn = peerConns[isHost ? message.sender : clientId];
+  // TODO: if got an offer and isHost, ignore?
+  if (message.rtcSessionDescription.type === 'offer') {
+    maybeLog()('Got offer. Sending answer to peer.');
+    peerConn.setRemoteDescription(new RTCSessionDescription(message.rtcSessionDescription), function() {},
+                                  logError);
+    peerConn.createAnswer(onLocalSessionCreated(message.sender), logError);
+
+  } else if (message.rtcSessionDescription.type === 'answer') {
+    maybeLog()('Got answer.');
+    peerConn.setRemoteDescription(new RTCSessionDescription(message.rtcSessionDescription), function() {},
+                                  logError);
+
+  } else if (message.rtcSessionDescription.type === 'candidate') {
+    
+    peerConn.addIceCandidate(new RTCIceCandidate({
+      candidate: message.rtcSessionDescription.candidate
+    }));
+
+  } else if (message === 'bye') {
+    // TODO: cleanup RTC connection?
+  }
+}
+
+// clientId: who to connect to?
+// isHost: Am I the initiator?
+// config: for RTCPeerConnection, contains STUN/TURN servers.
+function createPeerConnection(isHost, config, recipientClientId) {
+  maybeLog()('Creating Peer connection. isHost?', isHost, 'recipient', recipientClientId, 'config:',
+             config);
+  peerConns[recipientClientId] = new RTCPeerConnection(config);
+
+  // send any ice candidates to the other peer
+  peerConns[recipientClientId].onicecandidate = function(event) {
+    maybeLog()('icecandidate event:', event);
+    if (event.candidate) {
+      sendMessage({
+        type: 'candidate',
+        label: event.candidate.sdpMLineIndex,
+        id: event.candidate.sdpMid,
+        candidate: event.candidate.candidate
+      }, recipientClientId);
+    } else {
+      maybeLog()('End of candidates.');
+    }
+  };
+
+  if (isHost) {
+    maybeLog()('Creating Data Channel');
+    dataChannels[recipientClientId] = peerConns[recipientClientId].createDataChannel(recipientClientId);
+    onDataChannelCreated(dataChannels[recipientClientId]);
+
+    maybeLog()('Creating an offer');
+    peerConns[recipientClientId].createOffer(onLocalSessionCreated(recipientClientId), logError);
+  } else {
+    peerConns[recipientClientId].ondatachannel = (event) => {
+      maybeLog()('ondatachannel:', event.channel);
+      dataChannels[recipientClientId] = event.channel;
+      onDataChannelCreated(dataChannels[recipientClientId]);
+    };
+  }
+}
+
+function onLocalSessionCreated(recipientClientId) {
+  return (desc) => {
+    var peerConn = peerConns[isHost ? recipientClientId : clientId];
+    maybeLog()('local session created:', desc);
+    peerConn.setLocalDescription(desc, () => {
+      maybeLog()('sending local desc:', peerConn.localDescription);
+      sendMessage(peerConn.localDescription, recipientClientId);
+    }, logError);
+  };
+}
+
+function onDataChannelCreated(channel) {
+  maybeLog()('onDataChannelCreated:', channel);
+
+  channel.onopen = () => {
+    if (onConnected) {
+      onConnected(channel.label);
+    }
+    if (AUTO_PING) {
+      // As long as the channel is open, send a message 1/sec to
+      // measure latency and verify everything works
+      var cancel = window.setInterval(() => {
+        try {
+          channel.send(JSON.stringify({
+            action: 'echo',
+            time: performance.now(),
+          }));
+        } catch (e) {
+          console.error(e);
+          
+          window.clearInterval(cancel);
+        }
+      }, 1000);
+    } else {
+      // document.getElementById('latency').innerText = 'Connected';
+    }
+  };
+
+  channel.onmessage = (event) => {
+    // maybeLog()(event);
+    var x = JSON.parse(event.data);
+    if (x.action === 'echo') {
+      x.action = 'lag';
+      channel.send(JSON.stringify(x));
+    } else if (x.action == 'text') {
+      maybeLog()(x.data);
+    } else if (x.action == 'lag') {
+      var str = 'round trip latency ' + (performance.now() - x.time).toFixed(2) + ' ms';
+      maybeLog()(str);
+      // document.getElementById('latency').innerText = str;
+    } else if (onMessageReceived) {
+      x.clientId = channel.label;
+      onMessageReceived(x);
+    } else {
+      maybeLog()('unknown action');
+    }
+  };
+}
+
+
+/****************************************************************************
+ * Aux functions
+ ****************************************************************************/
+
+
+function randomToken() {
+  return Math.floor((1 + Math.random()) * 1e16).toString(16).substring(1);
+}
+
+function logError(err) {
+  console.log(err.toString(), err);
+}
+
+function maybeLog() {
+  if (VERBOSE) {
+    return console.log;
+  }
+  return function(){};
+}
