@@ -23,6 +23,7 @@
 		140ED2AC1D01E1AD002B40FF /* libReact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 146834041AC3E56700842450 /* libReact.a */; };
 		146834051AC3E58100842450 /* libReact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 146834041AC3E56700842450 /* libReact.a */; };
 		832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832341B51AAA6A8300B99B32 /* libRCTText.a */; };
+		B5903B291DDBB05500227E20 /* libReact-Native-Webview-Bridge.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5903B261DDBAFED00227E20 /* libReact-Native-Webview-Bridge.a */; };
 		B5AFD97B1DD9224D0068C7DD /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5AFD97A1DD9224D0068C7DD /* WebRTC.framework */; };
 		B5AFD97C1DD923360068C7DD /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5AFD97A1DD9224D0068C7DD /* WebRTC.framework */; };
 		B5AFD97D1DD923360068C7DD /* WebRTC.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B5AFD97A1DD9224D0068C7DD /* WebRTC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -116,6 +117,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 58B5119B1A9E6C1200147676;
 			remoteInfo = RCTText;
+		};
+		B5903B251DDBAFED00227E20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B5903B111DDBAFED00227E20 /* React-Native-Webview-Bridge.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4114DC4C1C187C3A003CD988;
+			remoteInfo = "React-Native-Webview-Bridge";
 		};
 		B5AFD9591DD9207C0068C7DD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -211,6 +219,7 @@
 		146833FF1AC3E56700842450 /* React.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = React.xcodeproj; path = "../node_modules/react-native/React/React.xcodeproj"; sourceTree = "<group>"; };
 		78C398B01ACF4ADC00677621 /* RCTLinking.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTLinking.xcodeproj; path = "../node_modules/react-native/Libraries/LinkingIOS/RCTLinking.xcodeproj"; sourceTree = "<group>"; };
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
+		B5903B111DDBAFED00227E20 /* React-Native-Webview-Bridge.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "React-Native-Webview-Bridge.xcodeproj"; path = "../node_modules/react-native-webview-bridge/ios/React-Native-Webview-Bridge.xcodeproj"; sourceTree = "<group>"; };
 		B5AFD9741DD922180068C7DD /* RCTWebRTC.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTWebRTC.xcodeproj; path = "../node_modules/react-native-webrtc/ios/RCTWebRTC.xcodeproj"; sourceTree = "<group>"; };
 		B5AFD97A1DD9224D0068C7DD /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebRTC.framework; path = "../node_modules/react-native-webrtc/ios/WebRTC.framework"; sourceTree = "<group>"; };
 		B5AFD9811DD9257F0068C7DD /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -238,6 +247,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5903B291DDBB05500227E20 /* libReact-Native-Webview-Bridge.a in Frameworks */,
 				B5AFD9941DD925EA0068C7DD /* libstdc++.tbd in Frameworks */,
 				B5AFD9921DD925DD0068C7DD /* libsqlite3.tbd in Frameworks */,
 				B5AFD9901DD925CF0068C7DD /* libc.tbd in Frameworks */,
@@ -379,6 +389,7 @@
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				B5903B111DDBAFED00227E20 /* React-Native-Webview-Bridge.xcodeproj */,
 				B5AFD9741DD922180068C7DD /* RCTWebRTC.xcodeproj */,
 				146833FF1AC3E56700842450 /* React.xcodeproj */,
 				00C302A71ABCB8CE00DB3ED1 /* RCTActionSheet.xcodeproj */,
@@ -422,6 +433,14 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* WebtendoClient.app */,
 				00E356EE1AD99517003FC87E /* WebtendoClientTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B5903B121DDBAFED00227E20 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B5903B261DDBAFED00227E20 /* libReact-Native-Webview-Bridge.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -559,6 +578,10 @@
 					ProjectRef = 139FDEE61B06529A00C62182 /* RCTWebSocket.xcodeproj */;
 				},
 				{
+					ProductGroup = B5903B121DDBAFED00227E20 /* Products */;
+					ProjectRef = B5903B111DDBAFED00227E20 /* React-Native-Webview-Bridge.xcodeproj */;
+				},
+				{
 					ProductGroup = 146834001AC3E56700842450 /* Products */;
 					ProjectRef = 146833FF1AC3E56700842450 /* React.xcodeproj */;
 				},
@@ -640,6 +663,13 @@
 			fileType = archive.ar;
 			path = libRCTText.a;
 			remoteRef = 832341B41AAA6A8300B99B32 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		B5903B261DDBAFED00227E20 /* libReact-Native-Webview-Bridge.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libReact-Native-Webview-Bridge.a";
+			remoteRef = B5903B251DDBAFED00227E20 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		B5AFD95A1DD9207C0068C7DD /* libRCTImage-tvOS.a */ = {

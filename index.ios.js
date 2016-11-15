@@ -1,6 +1,6 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
+ * React Native Webtendo controller.
+ * https://github.com/8enmann/WebtendoClient
  * @flow
  */
 
@@ -23,6 +23,8 @@ import {
   RTCView,
 } from 'react-native-webrtc';
 
+import WebViewBridge from 'react-native-webview-bridge';
+
 window.navigator.userAgent = "react-native";
 var io = require('socket.io-client/socket.io');
 var socket = io.connect('ws://localhost:8080', {
@@ -37,6 +39,8 @@ export default class WebtendoClient extends Component {
     this.state = {
       joined: false,
       ip: 'Connecting...',
+      stickX: height/2,
+      stickY: width/4,
     };
   }
   componentDidMount() {
@@ -44,99 +48,33 @@ export default class WebtendoClient extends Component {
   }
   onMessageReceived(x) {
     console.log(x);
-    this.setState({ip: 'Connectedz'});
+    this.setState({ip: 'Connected'});
+    const { webviewbridge } = this.refs;
+    webviewbridge.sendToBridge(JSON.stringify(x));
   }
   handlePress(evt, region) {
-    let x = evt.nativeEvent.locationX;
-    let y = evt.nativeEvent.locationY;
+    let x = evt.nativeEvent.pageX;
+    let y = evt.nativeEvent.pageY;
     if (region === 'stick') {
-      this.setState({stickLeft: x - 25, stickTop: y - 25});
-      console.log(this.state.stickLeft);
+      this.setState({stickX: x, stickY: y});
     }
     console.log(evt.nativeEvent);
   }
+  onBridgeMessage(stringifiedMessage){
+    const { webviewbridge } = this.refs;
+    sendToClient(clientId, stringifiedMessage);
+  }
   render() {
     return (
-      <View style={styles.container}>
-      <TouchableWithoutFeedback style={styles.ctrlLeft} onPress={(evt) => this.handlePress(evt, 'stick')}>
-      <View style={styles.joystick}>
-      <View style={[styles.stick, {top: this.state.stickTop, left: this.state.stickLeft}]}>
-      </View>
-      </View>
-      </TouchableWithoutFeedback>
-
-      <View style={styles.buttonBox}>
-      <TouchableOpacity style={[styles.button, {backgroundColor:'#3F51B5'}]} onPress={(evt) => this.handlePress(evt, 'a')}>
-      <Text style={styles.buttonText}>A</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, {backgroundColor:'#E91E63'}]}  onPress={(evt) => this.handlePress(evt, 'b')}>
-      <Text style={styles.buttonText}>B</Text>
-      </TouchableOpacity>
-      </View>
-      <Text style={styles.latency}>
-      {this.state.ip}
-      </Text>
-      </View>
+      <WebViewBridge
+      ref="webviewbridge"
+      onBridgeMessage={this.onBridgeMessage.bind(this)}
+      source={{uri: "http://localhost:8080/client-no-transport.html"}}/>
     );
   }
 }
 
 const styles = StyleSheet.create({
-  stick: {
-    backgroundColor: 'white',
-    borderWidth: 2,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    // TODO: replace
-    left: 50,
-    top: 50,
-  },
-  joystick: {
-    width: width / 2,
-    height: width / 2,
-    borderRadius: width / 4,
-    backgroundColor: '#2196F3',
-  },
-  buttonText: {
-    fontSize: 40,
-    color: 'white',
-  },
-  ctrlLeft: {
-    flex:1,
-    alignItems: 'center',
-    backgroundColor: 'white',
-    justifyContent: 'center',
-  },
-  buttonBox: {
-    justifyContent: 'center',
-
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    flex: 1,
-  },
-  button: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
-  container: {
-    alignItems: 'stretch',
-    flexDirection: 'row',
-    flex: 1,
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    backgroundColor: '#404040',
-  },
-
-  latency: {
-    textAlign: 'center',
-    color: 'white',
-    position: 'absolute',
-    bottom: 0,
-    margin: 10,
-    opacity: .5,
-  },
 });
 
 AppRegistry.registerComponent('WebtendoClient', () => WebtendoClient);
@@ -155,8 +93,12 @@ var isHost;
 // My ID.
 var clientId;
 // Send a message to a particular client.
-function sendToClient(recipientId, obj) {
-  return dataChannels[recipientId].send(JSON.stringify(obj));
+function sendToClient(recipientId, stringifiedMessage) {
+  if (dataChannels[recipientId]) {
+    return dataChannels[recipientId].send(stringifiedMessage);
+  } else {
+    console.log('no dataChannels');
+  };
 }
 // Send a message to all clients.
 function broadcast(obj) {
@@ -168,7 +110,7 @@ function getClients() {
 }
 // Measure latency at 1Hz.
 const AUTO_PING = false;
-const VERBOSE = false;
+const VERBOSE = true;
 
 /****************************************************************************
  * Initial setup
@@ -197,7 +139,7 @@ AsyncStorage.getItem('clientId').then(result => {
   } else {
     clientId = result;
   }
-  // socket.emit('create or join', 'foo', clientId, isHost);
+  socket.emit('create or join', 'foo', clientId, isHost);
   maybeLog()('Session clientId ' + clientId);  
 });
     
