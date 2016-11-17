@@ -123,12 +123,10 @@ var configuration = {
   ]
 };
 
-// Attach event handlers
-
 // Create a random room if not already present in the URL.
 isHost = false;
-// TODO: get room from server based on external IP, then store in window.location.hash
-var room = 'foo';
+// TODO: allow room override.
+var room = '';
 // Use session storage to maintain connections across refresh but allow
 // multiple tabs in the same browser for testing purposes.
 // Not to be confused with socket ID.
@@ -166,7 +164,7 @@ socket.on('full', function(room) {
 });
 
 socket.on('joined', function(room, clientId) {
-  maybeLog()(clientId, 'joined');
+  maybeLog()(clientId, 'joined', room);
   createPeerConnection(isHost, configuration, clientId);
 });
 
@@ -176,7 +174,7 @@ socket.on('log', function(array) {
 
 socket.on('message', signalingMessageCallback);
 
-socket.on('nohost', () => console.error('No host'));
+socket.on('nohost', room => console.error('No host for', room));
 
 /**
  * Send message to signaling server
@@ -188,7 +186,7 @@ function sendMessage(message, recipient) {
     rtcSessionDescription: message,
   };
   maybeLog()('Client sending message: ', payload);
-  socket.emit('message', room, payload);
+  socket.emit('message', payload);
 }
 
 /****************************************************************************
@@ -206,7 +204,7 @@ function signalingMessageCallback(message) {
   var peerConn = peerConns[isHost ? message.sender : clientId];
   // TODO: if got an offer and isHost, ignore?
   if (message.rtcSessionDescription.type === 'offer') {
-    maybeLog()('Got offer. Sending answer to peer.');
+    maybeLog()('Got offer. Sending answer to peer', message.sender);
     peerConn.setRemoteDescription(new RTCSessionDescription(message.rtcSessionDescription), function() {},
                                   logError);
     peerConn.createAnswer(onLocalSessionCreated(message.sender), logError);
