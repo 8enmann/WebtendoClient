@@ -69,7 +69,7 @@ export default class WebtendoClient extends Component {
       <WebViewBridge
       ref="webviewbridge"
       onBridgeMessage={this.onBridgeMessage.bind(this)}
-      source={{uri: "http://localhost:8080/client-no-transport.html"}}/>
+      source={{uri: "http://localhost:8080/client-no-transport.html#rn"}}/>
     );
   }
 }
