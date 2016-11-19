@@ -72,7 +72,7 @@ export default class WebtendoClient extends Component {
       <WebViewBridge
       ref="webviewbridge"
       onBridgeMessage={this.onBridgeMessage.bind(this)}
-      source={{uri: `http://${Config.SIGNALING_SERVER_URL}/client-no-transport.html#rn`}}/>
+      source={{uri: `https://${Config.SIGNALING_SERVER_URL}/client-no-transport.html#rn`}}/>
     );
   }
 }
@@ -140,7 +140,7 @@ AsyncStorage.getItem('clientId').then(result => {
   } else {
     clientId = result;
   }
-  socket.emit('create or join', 'foo', clientId, isHost);
+  socket.emit('create or join', room, clientId, isHost);
   maybeLog()('Session clientId ' + clientId);  
 });
     
