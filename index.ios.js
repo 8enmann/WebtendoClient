@@ -24,10 +24,13 @@ import {
 } from 'react-native-webrtc';
 
 import WebViewBridge from 'react-native-webview-bridge';
+  
+import Config from 'react-native-config'
+
 
 window.navigator.userAgent = "react-native";
 var io = require('socket.io-client/socket.io');
-var socket = io.connect('ws://localhost:8080', {
+var socket = io.connect(`ws://${Config.SIGNALING_SERVER_URL}`, {
   jsonp: false,
   transports: ['websocket']
 });
@@ -69,7 +72,7 @@ export default class WebtendoClient extends Component {
       <WebViewBridge
       ref="webviewbridge"
       onBridgeMessage={this.onBridgeMessage.bind(this)}
-      source={{uri: "http://localhost:8080/client-no-transport.html#rn"}}/>
+      source={{uri: `http://${Config.SIGNALING_SERVER_URL}/client-no-transport.html#rn`}}/>
     );
   }
 }
