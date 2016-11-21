@@ -55,14 +55,6 @@ export default class WebtendoClient extends Component {
     const { webviewbridge } = this.refs;
     webviewbridge.sendToBridge(JSON.stringify(x));
   }
-  handlePress(evt, region) {
-    let x = evt.nativeEvent.pageX;
-    let y = evt.nativeEvent.pageY;
-    if (region === 'stick') {
-      this.setState({stickX: x, stickY: y});
-    }
-    console.log(evt.nativeEvent);
-  }
   onBridgeMessage(stringifiedMessage){
     const { webviewbridge } = this.refs;
     sendToClient(clientId, stringifiedMessage);
@@ -72,7 +64,7 @@ export default class WebtendoClient extends Component {
       <WebViewBridge
       ref="webviewbridge"
       onBridgeMessage={this.onBridgeMessage.bind(this)}
-      source={{uri: `https://${Config.SIGNALING_SERVER_URL}/client-no-transport.html#rn`}}/>
+      source={{uri: `${Config.TRANSPORT}://${Config.SIGNALING_SERVER_URL}/client.html#rn`}}/>
     );
   }
 }
