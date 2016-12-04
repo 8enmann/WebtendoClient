@@ -64,7 +64,7 @@ export default class WebtendoClient extends Component {
       <WebViewBridge
       ref="webviewbridge"
       onBridgeMessage={this.onBridgeMessage.bind(this)}
-      source={{uri: `${Config.TRANSPORT}://${Config.SIGNALING_SERVER_URL}/index.html#rn`}}/>
+      source={{uri: `${Config.TRANSPORT}://${Config.SIGNALING_SERVER_URL}/index.html`}}/>
     );
   }
 }
