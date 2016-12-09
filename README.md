@@ -9,3 +9,9 @@ Expects a webtendo instance to be running. Currently defaults to http://localhos
 npm install
 react-native run ios
 ```
+
+# TODO
+[ ] Android client
+[ ] Allow tablets to host by passing URL changes back to RN
+[ ] Allow backing out of controller to game select screen
+[ ] Connection status like web
